@@ -5,65 +5,67 @@ import csv
 from datetime import datetime, timedelta
 import pandas as pd
 
-# def get_exchange_rates(date):
-#     url = f"https://www.x-rates.com/historical/?from=USD&amount=1&date={date}"
-#     response = requests.get(url)
-#     soup = BeautifulSoup(response.text, 'html.parser')
+###-------------- Craw forex data -----------------###
 
-#     # Find the table containing exchange rates
-#     table = soup.find('table', {'class': 'tablesorter ratesTable'})
-#     rates = {}
+def get_exchange_rates(date):
+    url = f"https://www.x-rates.com/historical/?from=USD&amount=1&date={date}"
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
 
-#     if table:
-#         rows = table.find_all('tr')
-#         for row in rows[1:]:  # Skip the header row
-#             cols = row.find_all('td')
-#             currency = cols[0].text.strip()
-#             rate = cols[1].text.strip()
-#             rates[currency] = rate
-    
-#     return rates
+    # Find the table containing exchange rates
+    table = soup.find('table', {'class': 'tablesorter ratesTable'})
+    rates = {}
 
-# def main():
-#     start_date = datetime(2020, 8, 22)
-#     end_date = datetime(2024, 6, 15)
-#     delta = timedelta(days=1)
+    if table:
+        rows = table.find_all('tr')
+        for row in rows[1:]:  # Skip the header row
+            cols = row.find_all('td')
+            currency = cols[0].text.strip()
+            rate = cols[1].text.strip()
+            rates[currency] = rate
+    
+    return rates
 
-#     # Create folder to save data (csv)
-#     if not os.path.exists("raw_data"):
-#         os.makedirs("raw_data")
-    
-#     # Define the path to the CSV file
-#     csv_file_path = os.path.join("raw_data", "craw_exchange_rates.csv")
-    
-#     all_data = {}
-#     all_currencies = set()
-    
-#     current_date = start_date
-#     while current_date <= end_date:
-#         date_str = current_date.strftime('%Y-%m-%d')
-#         print(f"Fetching data for {date_str}")
-#         rates = get_exchange_rates(date_str)
-#         all_data[date_str] = rates
-#         all_currencies.update(rates.keys())
-#         current_date += delta
+def main():
+    start_date = datetime(2020, 8, 22)
+    end_date = datetime(2024, 6, 15)
+    delta = timedelta(days=1)
 
-#     all_currencies = sorted(all_currencies)
+    # Create folder to save data (csv)
+    if not os.path.exists("raw_data"):
+        os.makedirs("raw_data")
     
-#     with open(csv_file_path, mode='w', newline='') as file:
-#         writer = csv.writer(file)
+    # Define the path to the CSV file
+    csv_file_path = os.path.join("raw_data", "craw_exchange_rates.csv")
+    
+    all_data = {}
+    all_currencies = set()
+    
+    current_date = start_date
+    while current_date <= end_date:
+        date_str = current_date.strftime('%Y-%m-%d')
+        print(f"Fetching data for {date_str}")
+        rates = get_exchange_rates(date_str)
+        all_data[date_str] = rates
+        all_currencies.update(rates.keys())
+        current_date += delta
+
+    all_currencies = sorted(all_currencies)
+    
+    with open(csv_file_path, mode='w', newline='') as file:
+        writer = csv.writer(file)
         
-#         # Write header
-#         header = ['Date'] + all_currencies
-#         writer.writerow(header)
+        # Write header
+        header = ['Date'] + all_currencies
+        writer.writerow(header)
         
-#         # Write data
-#         for date_str, rates in all_data.items():
-#             row = [date_str] + [rates.get(currency, 'N/A') for currency in all_currencies]
-#             writer.writerow(row)
+        # Write data
+        for date_str, rates in all_data.items():
+            row = [date_str] + [rates.get(currency, 'N/A') for currency in all_currencies]
+            writer.writerow(row)
 
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    main()
 
 
 ###-------------- Craw libor of USA and GBP -----------------###
