@@ -26,7 +26,7 @@ def get_exchange_rates(date):
     
     return rates
 
-def main():
+def forex_main():
     start_date = datetime(2020, 8, 22)
     end_date = datetime(2024, 6, 15)
     delta = timedelta(days=1)
@@ -64,20 +64,23 @@ def main():
             row = [date_str] + [rates.get(currency, 'N/A') for currency in all_currencies]
             writer.writerow(row)
 
-if __name__ == "__main__":
-    main()
-
-
 ###-------------- Craw libor of USA and GBP -----------------###
 
-def get_libor():
+def get_libor(year):
     # URL of the webpage
-    url = f"https://www.marketwatch.com/investing/interestrate/liborusd3m/download-data?startDate=1/3/2024&endDate=6/21/2024&countryCode=mr"
+    url = f"https://www.global-rates.com/en/interest-rates/libor/american-dollar/historical/{year}/"
     response = requests.get(url)
     soup = BeautifulSoup(response.text, 'html.parser')
 
     # find all tables on the page
-    tables = soup.find_all("table", {"class": "table table--overflow align--center"})
+    tables = soup.find_all("table", {"class": "table"})
+
+    if len(tables) < 2:
+        print(f"Second table not found for year {year}.")
+        return []
+
+    # Select the second table
+    table = tables[1]
 
     # Prepare to collect the data
     libor_data = []
@@ -85,34 +88,40 @@ def get_libor():
     # Parse the table rows
     for row in table.find_all("tr")[1:]:  # Skip the header row
         cells = row.find_all("td")
-        if len(cells) == 5:  # Ensure that the row has 6 columns
-            date = cells[0].text.strip()
-            openn = cells[1].text.strip().replace("%", "")
-            high = cells[2].text.strip().replace("%", "")
-            low = cells[3].text.strip().replace("%", "")
-            close = cells[4].text.strip().replace("%", "")
-            libor_data.append([date, openn, high, low, close])
+        if len(cells) == 6:  # Ensure that the row has 6 columns
+            month = cells[0].text.strip()
+            first = cells[1].text.strip()
+            last = cells[2].text.strip()
+            highest = cells[3].text.strip()
+            lowest = cells[4].text.strip()
+            average = cells[5].text.strip()
+            libor_data.append([year, month, first, last, highest, lowest, average])
 
     return libor_data
 
-def main():
+def libor_main():
+    start_year = 2000
+    end_year = 2024
+
     all_data = []
 
     for year in range(start_year, end_year + 1):
         print(f"Scraping data for the year {year}...")
         year_data = get_libor(year)
-        all_data.extend(year_data)
+        if year_data:  # Only extend if data is found
+            all_data.extend(year_data)
 
-    # Create a DataFrame
-    columns = ["Year", "Month", "First", "Last", "Highest", "Lowest", "Average"]
-    df = pd.DataFrame(all_data, columns=columns)
-    df.rename(columns={"Month": "Date"}, inplace=True)
-    df.drop(columns=["Year"], inplace=True)
+    if all_data:
+        # Create a DataFrame
+        columns = ["Year", "Month", "First", "Last", "Highest", "Lowest", "Average"]
+        df = pd.DataFrame(all_data, columns=columns)
 
-    # Save the DataFrame to a CSV file
-    csv_file_path = os.path.join("raw_data", "new_libor_data_USD.csv")
-    df.to_csv(csv_file_path, index=False)
-    print("Data has been successfully scraped and saved to libor_data_2000_2024.csv")
+        # Save the DataFrame to a CSV file
+        df.to_csv("raw_data/libor_data_USD.csv", index=False)
+        print("Data has been successfully scraped and saved to libor_usd_ts.csv")
+    else:
+        print("No data was scraped.")
 
 if __name__ == "__main__":
-    main()
+    forex_main()
+    # libor_main()
