@@ -24,7 +24,7 @@
     from 2000-01-03  
 		to 2020-08-21
   
-    https://www.federalreserve.gov/releases/g5a/current/default.htm
+    [https://www.federalreserve.gov/releases/g5a/current/default.htm](https://www.x-rates.com/historical/?from=USD&amount=1&date=2024-07-18)
   
     from 2020-08-22  
 		to 2024-06-15
